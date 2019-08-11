@@ -39,7 +39,7 @@ class CodeBlockError(NamedTuple):
     exc: Exception
 
 
-def _format_str(contents_text, args):  # type: (str, argparse.Namespace) -> int
+def _format_str(contents_text: str, args: argparse.Namespace) -> str:
     contents_text = pyupgrade._fix_py2_compatible(contents_text)
     contents_text = pyupgrade._fix_tokens(contents_text, args.py3_plus)
     if not args.keep_percent_format:
