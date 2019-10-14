@@ -41,14 +41,15 @@ class CodeBlockError(NamedTuple):
 
 
 def _format_str(contents_text: str, args: argparse.Namespace) -> str:
-    with tempfile.NamedTemporaryFile(mode="+") as f:
+    TMP_FILE_NAME = "/tmp/pyupgrade_docs_cache"
+    with open(TMP_FILE_NAME, "w") as f:
         f.write(contents_text)
-        f.seek(0)
 
-        new_args = deepcopy(args)
-        new_args.filenames = [f.name]  # Just to be safe
-        pyupgrade._fix_file(f.name, new_args)
+    new_args = deepcopy(args)
+    new_args.filenames = [TMP_FILE_NAME]  # Just to be safe
+    pyupgrade._fix_file(TMP_FILE_NAME, new_args)
 
+    with open(TMP_FILE_NAME) as f:
         return f.read()
 
 
@@ -109,7 +110,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="*")
 
-    # parser.add_argument('--exit-zero-even-if-changed', action='store_true')
+    parser.add_argument("--exit-zero-even-if-changed", action="store_true")
     parser.add_argument("--keep-percent-format", action="store_true")
 
     parser.add_argument(
