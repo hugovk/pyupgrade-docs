@@ -21,8 +21,9 @@ options:
 - `--keep-percent-format`
 - `--py3-plus` `--py3-only`
 - `--py36-plus`
+- `--py37-plus`
 
-Following additional parameters can be used:
+The following additional parameters can be used:
 
  - `-E` / `--skip-errors`
 
@@ -53,7 +54,7 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 -   repo: https://github.com/verhovsky/pyupgrade-docs
-    rev: v0.1.0
+    rev: v0.2.0
     hooks:
     -   id: pyupgrade-docs
 ```

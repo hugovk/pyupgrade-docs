@@ -3,6 +3,7 @@ import contextlib
 import re
 import textwrap
 import tempfile
+from copy import deepcopy
 from typing import Generator
 from typing import List
 from typing import Match
@@ -40,16 +41,15 @@ class CodeBlockError(NamedTuple):
 
 
 def _format_str(contents_text: str, args: argparse.Namespace) -> str:
-    contents_text = pyupgrade._fix_py2_compatible(contents_text)
-    contents_text = pyupgrade._fix_tokens(contents_text, args.py3_plus)
-    if not args.keep_percent_format:
-        contents_text = pyupgrade._fix_percent_format(contents_text)
-    if args.py3_plus:
-        contents_text = pyupgrade._fix_py3_plus(contents_text)
-    if args.py36_plus:
-        contents_text = pyupgrade._fix_fstrings(contents_text)
+    with tempfile.NamedTemporaryFile(mode="+") as f:
+        f.write(contents_text)
+        f.seek(0)
 
-    return contents_text
+        new_args = deepcopy(args)
+        new_args.filenames = [f.name]  # Just to be safe
+        pyupgrade._fix_file(f.name, new_args)
+
+        return f.read()
 
 
 def format_str(
@@ -111,14 +111,33 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     # parser.add_argument('--exit-zero-even-if-changed', action='store_true')
     parser.add_argument("--keep-percent-format", action="store_true")
-    parser.add_argument("--py3-plus", "--py3-only", action="store_true")
-    parser.add_argument("--py36-plus", action="store_true")
+
+    parser.add_argument(
+        "--py3-plus",
+        "--py3-only",
+        action="store_const",
+        dest="min_version",
+        default=(2, 7),
+        const=(3,),
+    )
+    parser.add_argument(
+        "--py36-plus", action="store_const", dest="min_version", const=(3, 6)
+    )
+    parser.add_argument(
+        "--py37-plus", action="store_const", dest="min_version", const=(3, 7)
+    )
+    parser.add_argument(
+        "--py38-plus", action="store_const", dest="min_version", const=(3, 8)
+    )
+    parser.add_argument(
+        "--py39-plus", action="store_const", dest="min_version", const=(3, 9)
+    )
+    parser.add_argument(
+        "--py4-plus", action="store_const", dest="min_version", const=(4, 0)
+    )
 
     parser.add_argument("-E", "--skip-errors", action="store_true")
     args = parser.parse_args(argv)
-
-    if args.py36_plus:
-        args.py3_plus = True
 
     retv = 0
     for filename in args.filenames:
